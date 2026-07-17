@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S. // Stark Industries HUD v5.0</title>
+    <!-- Google Fonts for futuristic typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="jarvis-theme boot-loading">
+
+    <!-- Ambient Grid & Scanlines -->
+    <div class="hud-grid"></div>
+    <div class="hud-scanlines"></div>
+    <div class="hud-vignette"></div>
+    <canvas id="hud-scanner-canvas"></canvas>
+
+    <!-- Initial Boot Loader Screen -->
+    <div class="boot-screen" id="boot-screen">
+        <div class="boot-reactor-wrapper">
+            <div class="boot-reactor-ring outer"></div>
+            <div class="boot-reactor-ring middle"></div>
+            <div class="boot-reactor-ring inner"></div>
+            <div class="boot-reactor-core"></div>
+        </div>
+        <div class="boot-title-brand">STARK INDUSTRIES</div>
+        <div class="boot-subtitle-system">DECIMAL HUD OPERATING SYSTEM v5.0</div>
+        
+        <div class="boot-console" id="boot-console">
+            <div>[OK] SECURE DATA NETWORK LINK ESTABLISHED</div>
+            <div>[OK] NEURAL TRANSLATION SYNAPSE STABLE</div>
+            <div>[OK] BIOMETRIC TELEMETRY RECEIVERS: ONLINE</div>
+        </div>
+        
+        <button class="boot-btn" id="boot-btn">INITIALIZE J.A.R.V.I.S.</button>
+        <div class="boot-prompt">PLACE BIOMETRIC VERIFICATION (CLICK TO BOOT)</div>
+    </div>
+
+    <!-- Main HUD Frame Container -->
+    <div class="hud-container" id="hud-main" style="display: none;">
+        
+        <!-- TOP HUD SYSTEM PANEL -->
+        <header class="hud-top-bar">
+            <div class="hud-corner-notches top-left-notches">
+                <span class="hud-tag glow-text">SYS.V_5.0</span>
+                <span class="hud-status-indicator online-status">
+                    <span class="status-pulse-dot"></span> SECURE LINK
+                </span>
+            </div>
+            
+            <div class="hud-central-header">
+                <div class="hud-header-subtitle">TACTICAL HELMET HUD</div>
+                <h1 class="hud-main-title glitch-text" data-text="J.A.R.V.I.S.">J.A.R.V.I.S.</h1>
+            </div>
+            
+            <div class="hud-corner-notches top-right-notches">
+                <!-- Live Sound Wave Visualizer Canvas -->
+                <div class="visualizer-container" title="Audio Output Spectrum">
+                    <canvas id="audio-viz-canvas"></canvas>
+                </div>
+                
+                <button class="hud-action-btn theme-combat-btn" id="mode-toggle">
+                    <span class="btn-hover-clip"></span>
+                    <span class="btn-label">COMBAT MODE</span>
+                </button>
+                
+                <button class="hud-audio-btn active" id="audio-toggle" title="Mute/Unmute Synthesizer">
+                    <span class="audio-waves-container">
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                        <span class="wave-bar"></span>
+                    </span>
+                    <span class="audio-label-text">AUDIO: ON</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- LEFT CONTROL COLUMN (MENU MATRIX) -->
+        <aside class="hud-sidebar left-sidebar">
+            <div class="sidebar-header-bar">
+                <span class="header-prefix">►</span> MENU SECTIONS
+            </div>
+            <nav class="hud-navigation-menu">
+                <button class="menu-nav-item active" data-target="bio-widget" id="btn-bio">
+                    <span class="item-index">01</span>
+                    <span class="item-title">GENIUS BIO</span>
+                    <span class="item-code">// ARCHIVE</span>
+                </button>
+                <button class="menu-nav-item" data-target="suits-widget" id="btn-suits">
+                    <span class="item-index">02</span>
+                    <span class="item-title">ARMOR MATRIX</span>
+                    <span class="item-code">// PROJECTS</span>
+                </button>
+                <button class="menu-nav-item" data-target="reactor-widget" id="btn-tech">
+                    <span class="item-index">03</span>
+                    <span class="item-title">ARC REACTOR</span>
+                    <span class="item-code">// ENERGY</span>
+                </button>
+                <button class="menu-nav-item" data-target="log-widget" id="btn-logs">
+                    <span class="item-index">04</span>
+                    <span class="item-title">DIAGNOSTICS</span>
+                    <span class="item-code">// LOGS</span>
+                </button>
+            </nav>
+
+            <!-- Sidebar System Load Stats -->
+            <div class="sidebar-telemetry-panel">
+                <div class="telemetry-bar-row">
+                    <div class="telemetry-row-info">
+                        <span>CPU OVERCLOCK</span>
+                        <span id="cpu-val" class="font-mono">45%</span>
+                    </div>
+                    <div class="telemetry-progress-bg">
+                        <div class="telemetry-progress-fill" id="cpu-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+                
+                <div class="telemetry-bar-row">
+                    <div class="telemetry-row-info">
+                        <span>CORE TEMP</span>
+                        <span id="temp-val" class="font-mono alert-text">68°C</span>
+                    </div>
+                    <div class="telemetry-progress-bg">
+                        <div class="telemetry-progress-fill alert-fill" id="temp-fill" style="width: 68%;"></div>
+                    </div>
+                </div>
+                
+                <div class="telemetry-bar-row">
+                    <div class="telemetry-row-info">
+                        <span>SYSTEM INTEGRITY</span>
+                        <span class="font-mono">100%</span>
+                    </div>
+                    <div class="telemetry-progress-bg">
+                        <div class="telemetry-progress-fill" id="integrity-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT DATA COLUMN (RADAR & TELEMETRY) -->
+        <aside class="hud-sidebar right-sidebar">
+            <div class="sidebar-header-bar">
+                <span class="header-prefix">►</span> SENSORY SYSTEM
+            </div>
+            
+            <div class="sensory-widget-container">
+                <!-- Circular Target Radar -->
+                <div class="hud-radar-scanner">
+                    <div class="radar-ping-sweep"></div>
+                    <div class="radar-targeting-lines"></div>
+                    <div class="radar-target-dot" style="top: 25%; left: 35%;"></div>
+                    <div class="radar-target-dot" style="top: 65%; left: 70%;"></div>
+                    <div class="radar-grid-rings"></div>
+                </div>
+                
+                <!-- Telemetry Stats readout -->
+                <div class="sensory-data-readout">
+                    <div class="readout-group">
+                        <div class="readout-title">SYS ENVIRONMENT STATUS</div>
+                        <div class="readout-value font-mono">GRID ENCRYPTED</div>
+                    </div>
+                    <div class="readout-group">
+                        <div class="readout-title">TACTICAL THREAT DETECTION</div>
+                        <div class="readout-value font-mono alert-text" id="threat-level">MINIMAL</div>
+                    </div>
+                    <div class="readout-group">
+                        <div class="readout-title">HUD TARGET COORDS</div>
+                        <div class="readout-value font-mono" id="coords-val">X: 00.00 Y: 00.00</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER PERSPECTIVE VIEW: ARC REACTOR CORE & RETICLES -->
+        <main class="hud-viewport-stage">
+            <div class="viewport-reticle-wrapper">
+                <!-- Orbiting Degrees HUD dials -->
+                <div class="hud-viewport-dial dial-outer">
+                    <span class="dial-ticks"></span>
+                </div>
+                <div class="hud-viewport-dial dial-inner"></div>
+                <div class="hud-crosshair-center"></div>
+                
+                <!-- Arc Reactor Interactive Mesh -->
+                <div class="arc-reactor-shield" id="arc-core">
+                    <img src="arc_reactor.jpg" alt="Stark Industries Arc Reactor" class="arc-reactor-graphics" id="arc-img">
+                    <div class="arc-refraction-overlay"></div>
+                </div>
+
+                <!-- Reactor Power Readings -->
+                <div class="reactor-readings-panel">
+                    <div class="readings-title">POWER CAPACITY</div>
+                    <div class="readings-percentage font-mono" id="power-percent">100%</div>
+                    <div class="readings-state glow-text" id="power-status">CORE SECURE</div>
+                </div>
+            </div>
+
+            <!-- Fullscreen Combat Warning Screen Overlay -->
+            <div class="hud-combat-flash-screen" id="combat-flash"></div>
+        </main>
+
+        <!-- HOLOGRAPHIC FLOATING INFORMATION WIDGETS -->
+        
+        <!-- BIOGRAPHY ARCHIVE (SEC-01) -->
+        <div class="hologram-floating-widget active-widget" id="bio-widget">
+            <div class="widget-head-bar">
+                <span class="widget-caption">► BIOMETRIC INTELLIGENCE // DOSSIER Stark_A_E</span>
+                <button class="widget-dismiss-btn" data-close="bio-widget">&times;</button>
+            </div>
+            
+            <div class="widget-body-content">
+                <div class="dossier-layout-grid">
+                    <div class="dossier-photo-frame">
+                        <div class="photo-scanning-line"></div>
+                        <!-- Virtual Avatar layout via SVG overlay -->
+                        <div class="photo-placeholder-graphic">
+                            <div class="avatar-circle"></div>
+                            <div class="avatar-chest-reactor"></div>
+                            <div class="avatar-scanning-grid"></div>
+                        </div>
+                        <div class="photo-label font-mono">SUBJECT ID: STARK_MK_85</div>
+                    </div>
+                    
+                    <div class="dossier-profile-info">
+                        <h3 class="dossier-header glow-text">ЭНТОНИ ЭДВАРД СТАРК</h3>
+                        <p class="typewriter-text" data-delay="20">
+                            Гениальный изобретатель, величайший оружейный конструктор и создатель брони Железного Человека. Спас собственную жизнь, вживив в грудь революционный дуговой реактор, который впоследствии стал источником колоссальной энергии для защиты всего мира.
+                        </p>
+                        
+                        <div class="dossier-metadata-sheet font-mono">
+                            <div class="metadata-cell"><strong> Clearance:</strong> LEVEL 10 / EXTREME</div>
+                            <div class="metadata-cell"><strong> Education:</strong> MIT (Graduate at 17)</div>
+                            <div class="metadata-cell"><strong> Affiliation:</strong> AVENGERS / STARK IND.</div>
+                            <div class="metadata-cell"><strong> Current Status:</strong> LEGENDARY HERO</div>
+                        </div>
+                        
+                        <div class="dossier-quote-container">
+                            <span class="quote-prefix">"</span>Я — Железный Человек.<span class="quote-suffix">"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-foot-status font-mono">
+                <span>SECURITY: EXTREMELY STARCH NET</span>
+                <span>PACKET ID: 0x85FF29</span>
+            </div>
+        </div>
+
+        <!-- ARMOR DESIGN MATRIX (SEC-02) -->
+        <div class="hologram-floating-widget" id="suits-widget">
+            <div class="widget-head-bar">
+                <span class="widget-caption">► PROJECT ARCHITECTURE // ARMOR MATRICES</span>
+                <button class="widget-dismiss-btn" data-close="suits-widget">&times;</button>
+            </div>
+            
+            <div class="widget-body-content">
+                <div class="armor-viewer-grid">
+                    <!-- Holographic blueprint column -->
+                    <div class="blueprint-canvas-column">
+                        <div class="blueprint-canvas-viewport">
+                            <div class="blueprint-axes-notches"></div>
+                            <img src="ironman_suit.jpg" alt="Iron Man Armor Schematic" class="hologram-blueprint-img" id="suit-img">
+                            <div class="blueprint-laser-sweep"></div>
+                        </div>
+                        
+                        <div class="blueprint-control-sliders">
+                            <span class="slider-notices font-mono">DRAG MOUSE OR SLIDE TO ROTATE COMPASS // 360°</span>
+                            <div class="range-slider-wrapper">
+                                <span class="range-label font-mono">ROTATE:</span>
+                                <input type="range" id="rotation-range" min="0" max="360" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tech specifications column -->
+                    <div class="specs-readout-column">
+                        <div class="armor-select-tabs-row">
+                            <button class="armor-tab-btn active" data-suit="mk3">MARK III</button>
+                            <button class="armor-tab-btn" data-suit="mk43">MARK XLIII</button>
+                            <button class="armor-tab-btn" data-suit="mk50">MARK L</button>
+                            <button class="armor-tab-btn" data-suit="mk85">MARK LXXXV</button>
+                        </div>
+                        
+                        <div class="armor-technical-specs" id="suit-details">
+                            <h3 class="armor-spec-name glow-text" id="suit-name">MARK III // THE CLASSIC</h3>
+                            <p class="armor-spec-description" id="suit-desc">Первый золотисто-красный костюм. Оснащен реактивными репульсорами, встроенными ракетами, мини-ганом на плече и прочной золотисто-титановой броней.</p>
+                            
+                            <div class="metric-scale-group font-mono">
+                                <div class="metric-title-val">
+                                    <span>REPULSOR CALIBRATION</span>
+                                    <span id="val-repulsor">75%</span>
+                                </div>
+                                <div class="metric-visual-track">
+                                    <div class="metric-progress-fill" id="spec-repulsor" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-scale-group font-mono">
+                                <div class="metric-title-val">
+                                    <span>FLIGHT VELOCITY CAP</span>
+                                    <span id="val-flight">Mach 2.0</span>
+                                </div>
+                                <div class="metric-visual-track">
+                                    <div class="metric-progress-fill" id="spec-flight" style="width: 20%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-scale-group font-mono">
+                                <div class="metric-title-val">
+                                    <span>SHIELD CONVERSION</span>
+                                    <span id="val-shield">70%</span>
+                                </div>
+                                <div class="metric-visual-track">
+                                    <div class="metric-progress-fill" id="spec-shield" style="width: 70%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="metric-scale-group font-mono">
+                                <div class="metric-title-val">
+                                    <span>NANOTECHNOLOGY COMPATIBILITY</span>
+                                    <span id="val-nano">N/A</span>
+                                </div>
+                                <div class="metric-visual-track">
+                                    <div class="metric-progress-fill" id="spec-nano" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-foot-status font-mono">
+                <span>STARK CAD INTEGRATION</span>
+                <span>SYSTEM: COMPILING...</span>
+            </div>
+        </div>
+
+        <!-- ENERGY CORE PROFILE (SEC-03) -->
+        <div class="hologram-floating-widget" id="reactor-widget">
+            <div class="widget-head-bar">
+                <span class="widget-caption">► CORE THERMAL DYNAMICS // DUGOVOI RECTOR</span>
+                <button class="widget-dismiss-btn" data-close="reactor-widget">&times;</button>
+            </div>
+            
+            <div class="widget-body-content">
+                <div class="reactor-analysis-grid">
+                    <div class="reactor-oscilloscope-display">
+                        <div class="wave-simulation-box">
+                            <div class="wave-expanding-ring scale-1"></div>
+                            <div class="wave-expanding-ring scale-2"></div>
+                            <div class="wave-expanding-ring scale-3"></div>
+                            <div class="wave-generator-nucleus"></div>
+                        </div>
+                        
+                        <div class="control-actions-row">
+                            <button class="control-trigger-btn alert-trigger-btn" id="overcharge-btn">OVERCHARGE CORE</button>
+                            <button class="control-trigger-btn" id="discharge-btn">DISCHARGE CORE</button>
+                        </div>
+                    </div>
+                    
+                    <div class="reactor-structural-data">
+                        <h3 class="reactor-dossier-title glow-text">SYNTHESIZED ENERGY MATRIX</h3>
+                        <p class="reactor-dossier-body">Реактор холодного термоядерного синтеза вырабатывает невероятное количество чистой энергии. Усовершенствованный Тони Старком на основе нового стабильного изотопа, он полностью исключил палладиевое отравление.</p>
+                        
+                        <ul class="reactor-specification-bullets font-mono">
+                            <li><strong>CORE OUTPUT:</strong> 12.0 GigaWatts / sec</li>
+                            <li><strong>STABILIZER TYPE:</strong> BADIUM SYNTHETIC ELEMENT</li>
+                            <li><strong>REACTOR EFFICIENCY:</strong> 99.987%</li>
+                            <li><strong>THERMAL DISSIPATION:</strong> STABLE AUTOMATIC</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-foot-status font-mono">
+                <span>DYNAMICS: SYNCED CORE STATE</span>
+                <span>ELEMENT TYPE: EXOTIC_96</span>
+            </div>
+        </div>
+
+        <!-- DIAGNOSTICS LOG MATRIX (SEC-04) -->
+        <div class="hologram-floating-widget" id="log-widget">
+            <div class="widget-head-bar">
+                <span class="widget-caption">► DIAGNOSTICS MATRIX // SYSTEM LOG STREAM</span>
+                <button class="widget-dismiss-btn" data-close="log-widget">&times;</button>
+            </div>
+            
+            <div class="widget-body-content">
+                <div class="log-matrix-layout">
+                    <div class="log-grid-headers font-mono">
+                        <span>TIMESTAMP</span>
+                        <span>DIAGNOSTIC PROCESS EVENT</span>
+                        <span>STATUS</span>
+                    </div>
+                    <div class="log-terminal-scroller font-mono" id="log-stream">
+                        <!-- Instantiated dynamically by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-foot-status font-mono">
+                <span>BUFFER STATUS: 100% OK</span>
+                <span>LOG ARCHIVES ACTIVE</span>
+            </div>
+        </div>
+
+        <!-- FOOTER HUD BAR -->
+        <footer class="hud-bottom-bar">
+            <div class="hud-footer-capsule footer-left">
+                <div class="capsule-prefix-tag font-mono">SYS STATUS</div>
+                <div class="capsule-ticker-text font-mono" id="scanner-feed">J.A.R.V.I.S. PROTOCOLS LOADED. WAITING FOR COMMENCEMENT SCAN...</div>
+            </div>
+            
+            <div class="hud-central-branding">
+                <div class="stark-embossed-logo">STARK INDUSTRIES</div>
+            </div>
+            
+            <div class="hud-footer-capsule footer-right">
+                <div class="terminal-scrolling-line font-mono" id="term-line">> INITIAL SCANS SECURE. HUD ONLINE.</div>
+            </div>
+        </footer>
+        
+    </div>
+
+    <!-- Main Controller Logic script -->
+    <script src="app.js"></script>
+</body>
+</html>
